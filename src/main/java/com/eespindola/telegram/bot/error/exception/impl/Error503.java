@@ -1,21 +1,17 @@
 package com.eespindola.telegram.bot.error.exception.impl;
 
-import com.eespindola.telegram.bot.error.exception.GenericErrorData;
+import com.eespindola.telegram.bot.error.enums.ErrorEnum;
 
 import java.util.List;
 
-public class Error503 extends RuntimeException implements GenericErrorData {
+public class Error503 extends GenericRuntimeException {
   // Service Unavailable
-  private List<String> description;
-
   public Error503(List<String> description) {
-    super();
-    this.description = description;
+    super(description, ErrorEnum.ERROR_503);
   }
 
-  @Override
-  public List<String> getDescription() {
-    return description;
+  public Error503(List<String> description, Throwable e) {
+    super(description, ErrorEnum.ERROR_503, e);
   }
 
 }

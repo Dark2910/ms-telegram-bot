@@ -5,7 +5,7 @@ import com.eespindola.telegram.bot.configuration.TelegramConfig;
 import com.eespindola.telegram.bot.model.MessageRequest;
 import com.eespindola.telegram.bot.model.dto.Result;
 import com.eespindola.telegram.bot.service.BotService;
-import com.eespindola.telegram.bot.util.Constantes;
+import com.eespindola.telegram.bot.util.ResultFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,10 +36,7 @@ public class BotServiceImpl implements BotService {
 
     telegramClient.sendMessage(telegram.getToken(), map);
 
-    return Result.<Void>builder()
-            .success(true)
-            .message(Constantes.MESSAGE_OK)
-            .build();
+    return ResultFactory.success("Mensaje enviado.");
   }
 
 }

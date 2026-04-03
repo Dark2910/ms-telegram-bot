@@ -1,21 +1,13 @@
 package com.eespindola.telegram.bot.error.exception.impl;
 
-import com.eespindola.telegram.bot.error.exception.GenericErrorData;
+import com.eespindola.telegram.bot.error.enums.ErrorEnum;
 
 import java.util.List;
 
-public class Error401 extends RuntimeException implements GenericErrorData {
+public class Error401 extends GenericRuntimeException {
   // Unauthorized
-  private final List<String> description;
-
   public Error401(List<String> description) {
-    super();
-    this.description = description;
-  }
-
-  @Override
-  public List<String> getDescription() {
-    return description;
+    super(description, ErrorEnum.ERROR_401);
   }
 
 }

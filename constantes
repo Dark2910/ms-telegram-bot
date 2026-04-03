@@ -1,0 +1,390 @@
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/client/TelegramClient.java b/src/main/java/com/eespindola/telegram/bot/client/TelegramClient.java[m
+[1mindex 4790c3f..9852731 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/client/TelegramClient.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/client/TelegramClient.java[m
+[36m@@ -1,6 +1,5 @@[m
+ package com.eespindola.telegram.bot.client;[m
+ [m
+[31m-import com.eespindola.telegram.bot.util.Constantes;[m
+ import org.springframework.cloud.openfeign.FeignClient;[m
+ import org.springframework.web.bind.annotation.PathVariable;[m
+ import org.springframework.web.bind.annotation.PostMapping;[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/controller/BotController.java b/src/main/java/com/eespindola/telegram/bot/controller/BotController.java[m
+[1mindex 0fd54f8..e7c6159 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/controller/BotController.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/controller/BotController.java[m
+[36m@@ -4,6 +4,8 @@[m [mimport com.eespindola.telegram.bot.model.MessageRequest;[m
+ import com.eespindola.telegram.bot.model.dto.Result;[m
+ import com.eespindola.telegram.bot.service.BotService;[m
+ import jakarta.validation.Valid;[m
+[32m+[m[32mimport org.slf4j.Logger;[m
+[32m+[m[32mimport org.slf4j.LoggerFactory;[m
+ import org.springframework.beans.factory.annotation.Autowired;[m
+ import org.springframework.http.HttpStatus;[m
+ import org.springframework.http.ResponseEntity;[m
+[36m@@ -15,6 +17,7 @@[m [mimport org.springframework.web.bind.annotation.RestController;[m
+ @RestController[m
+ @RequestMapping("/telegram/bot")[m
+ public class BotController {[m
+[32m+[m[32m  private static final Logger LOG = LoggerFactory.getLogger(BotController.class);[m
+ [m
+   private final BotService botService;[m
+ [m
+[36m@@ -29,6 +32,7 @@[m [mpublic class BotController {[m
+   public ResponseEntity<Result<Void>> sendMessageController([m
+           @Valid @RequestBody MessageRequest request[m
+   ){[m
+[32m+[m[32m    LOG.info("Procesando mensaje para el usuario");[m
+     Result<Void> result = botService.sendMessage(request);[m
+     return new ResponseEntity<>(result, HttpStatus.OK);[m
+   }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/controller/ExceptionController.java b/src/main/java/com/eespindola/telegram/bot/error/controller/ExceptionController.java[m
+[1mindex 9e64ff0..2660788 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/controller/ExceptionController.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/controller/ExceptionController.java[m
+[36m@@ -3,6 +3,7 @@[m [mpackage com.eespindola.telegram.bot.error.controller;[m
+ import com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ import com.eespindola.telegram.bot.error.exception.impl.*;[m
+ import com.eespindola.telegram.bot.model.dto.Result;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.util.ResultFactory;[m
+ import feign.FeignException;[m
+ import org.springframework.context.support.DefaultMessageSourceResolvable;[m
+ import org.springframework.http.HttpStatus;[m
+[36m@@ -16,40 +17,10 @@[m [mimport java.util.List;[m
+ @RestControllerAdvice[m
+ public class ExceptionController {[m
+ [m
+[31m-  @ExceptionHandler(Error400.class)[m
+[31m-  private ResponseEntity<Result<String>> error400Controller(Error400 error400){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_400, error400.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);[m
+[31m-  }[m
+[31m-[m
+[31m-  @ExceptionHandler(Error401.class)[m
+[31m-  private ResponseEntity<Result<String>> error401Controller(Error401 error401){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_401, error401.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.UNAUTHORIZED);[m
+[31m-  }[m
+[31m-[m
+[31m-  @ExceptionHandler(Error403.class)[m
+[31m-  private ResponseEntity<Result<String>> error403Controller(Error403 error403){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_403, error403.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.FORBIDDEN);[m
+[31m-  }[m
+[31m-[m
+[31m-  @ExceptionHandler(Error404.class)[m
+[31m-  private ResponseEntity<Result<String>> error404Controller(Error404 error404){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_404, error404.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.NOT_FOUND);[m
+[31m-  }[m
+[31m-[m
+[31m-  @ExceptionHandler(Error500.class)[m
+[31m-  private ResponseEntity<Result<String>> error500Controller(Error500 error500){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_500, error500.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);[m
+[31m-  }[m
+[31m-[m
+[31m-  @ExceptionHandler(Error503.class)[m
+[31m-  private ResponseEntity<Result<String>> error503Controller(Error503 error503){[m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_503, error503.getDescription());[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.SERVICE_UNAVAILABLE);[m
+[32m+[m[32m  @ExceptionHandler(GenericRuntimeException.class)[m
+[32m+[m[32m  private ResponseEntity<Result<String>> genericExceptionController(GenericRuntimeException e) {[m
+[32m+[m[32m    Result<String> result = ResultBuilder.buildSuccess(e.getErrorEnum().getMessage(), e.getDescription());[m
+[32m+[m[32m    return ResponseEntity.status(e.getErrorEnum().getStatus()).body(result);[m
+   }[m
+ [m
+   // Validation[m
+[36m@@ -60,36 +31,25 @@[m [mpublic class ExceptionController {[m
+             .map(DefaultMessageSourceResolvable::getDefaultMessage)[m
+             .toList();[m
+ [m
+[31m-    Result<String> result = builResult(ErrorEnum.ERROR_400, errorList);[m
+[31m-    return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);[m
+[32m+[m[32m    Result<String> result = ResultBuilder.buildError(ErrorEnum.ERROR_400.getMessage(),[m
+[32m+[m[32m                                                     ErrorEnum.ERROR_400.getErrorCode(), errorList);[m
+[32m+[m
+[32m+[m[32m    return new ResponseEntity<>(result, ErrorEnum.ERROR_400.getStatus());[m
+   }[m
+ [m
+   // Feign[m
+   @ExceptionHandler(FeignException.class)[m
+[31m-  private ResponseEntity<Result<String>> feignExceptionController(FeignException e){[m
+[32m+[m[32m  private ResponseEntity<Result<String>> feignExceptionController(FeignException e) {[m
+ [m
+     HttpStatus status = HttpStatus.resolve(e.status());[m
+[31m-    if(status == null){[m
+[32m+[m[32m    if (status == null) {[m
+       status = HttpStatus.INTERNAL_SERVER_ERROR;[m
+     }[m
+ [m
+[31m-    Result<String> result = Result.<String>builder()[m
+[31m-            .success(false)[m
+[31m-            .message(status.getReasonPhrase())[m
+[31m-            .errorCode(status.value())[m
+[31m-            .errorDescription(List.of("Error feignClient"))[m
+[31m-            .build();[m
+[32m+[m[32m    Result<String> result =[m
+[32m+[m[32m            ResultBuilder.buildError(status.getReasonPhrase(), status.value(), List.of("Error feignClient"));[m
+ [m
+     return new ResponseEntity<>(result, status);[m
+   }[m
+ [m
+[31m-  private static Result<String> builResult(ErrorEnum errorEnum, List<String> errorList) {[m
+[31m-    return Result.<String>builder()[m
+[31m-            .success(false)[m
+[31m-            .message(errorEnum.getDescription())[m
+[31m-            .errorCode(errorEnum.getErrorCode())[m
+[31m-            .errorDescription(errorList)[m
+[31m-            .build();[m
+[31m-  }[m
+[31m-[m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/enums/ErrorEnum.java b/src/main/java/com/eespindola/telegram/bot/error/enums/ErrorEnum.java[m
+[1mindex 7d45d85..6f14e36 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/enums/ErrorEnum.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/enums/ErrorEnum.java[m
+[36m@@ -1,22 +1,25 @@[m
+ package com.eespindola.telegram.bot.error.enums;[m
+ [m
+ import lombok.Getter;[m
+[32m+[m[32mimport org.springframework.http.HttpStatus;[m
+ [m
+ @Getter[m
+ public enum ErrorEnum {[m
+ [m
+[31m-  ERROR_400("Bad Request", 400),[m
+[31m-  ERROR_401("Unauthorized", 401),[m
+[31m-  ERROR_403("Forbidden", 403),[m
+[31m-  ERROR_404("Not Found", 404),[m
+[31m-  ERROR_500("Internal Server Error", 500),[m
+[31m-  ERROR_503("Service Unavailable", 503);[m
+[32m+[m[32m  ERROR_400(HttpStatus.BAD_REQUEST, "Bad Request", 4000),[m
+[32m+[m[32m  ERROR_401(HttpStatus.UNAUTHORIZED, "Unauthorized", 4001),[m
+[32m+[m[32m  ERROR_403(HttpStatus.FORBIDDEN, "Forbidden", 4003),[m
+[32m+[m[32m  ERROR_404(HttpStatus.NOT_FOUND, "Not Found", 4004),[m
+[32m+[m[32m  ERROR_500(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", 5000),[m
+[32m+[m[32m  ERROR_503(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", 5003);[m
+ [m
+[31m-  private final String description;[m
+[32m+[m[32m  private final HttpStatus status;[m
+[32m+[m[32m  private final String message;[m
+   private final int errorCode;[m
+ [m
+[31m-  ErrorEnum(String description, int errorCode){[m
+[31m-    this.description = description;[m
+[32m+[m[32mErrorEnum(HttpStatus status, String message, int errorCode) {[m
+[32m+[m[32m    this.status = status;[m
+[32m+[m[32m    this.message = message;[m
+     this.errorCode = errorCode;[m
+   }[m
+ [m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/ErrorData.java b/src/main/java/com/eespindola/telegram/bot/error/exception/ErrorData.java[m
+[1mindex 3bd922f..c554bd7 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/ErrorData.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/ErrorData.java[m
+[36m@@ -1,9 +1,13 @@[m
+ package com.eespindola.telegram.bot.error.exception;[m
+ [m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+[32m+[m
+ import java.util.List;[m
+ [m
+[31m-public interface GenericErrorData {[m
+[32m+[m[32mpublic interface ErrorData {[m
+ [m
+   List<String> getDescription();[m
+ [m
+[32m+[m[32m  ErrorEnum getErrorEnum();[m
+[32m+[m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error400.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error400.java[m
+[1mindex 6a46135..b2e9d82 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error400.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error400.java[m
+[36m@@ -1,21 +1,13 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error400 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error400 extends GenericRuntimeException {[m
+   // Bad Request[m
+[31m-  private final List<String> description;[m
+[31m-[m
+   public Error400(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[31m-  }[m
+[31m-[m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_400);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error401.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error401.java[m
+[1mindex b21961e..bbf80e0 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error401.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error401.java[m
+[36m@@ -1,21 +1,13 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error401 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error401 extends GenericRuntimeException {[m
+   // Unauthorized[m
+[31m-  private final List<String> description;[m
+[31m-[m
+   public Error401(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[31m-  }[m
+[31m-[m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_401);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error403.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error403.java[m
+[1mindex ac587dc..6173686 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error403.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error403.java[m
+[36m@@ -1,21 +1,13 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error403 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error403 extends GenericRuntimeException {[m
+   // Forbidden[m
+[31m-  private List<String> description;[m
+[31m-[m
+   public Error403(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[31m-  }[m
+[31m-[m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_403);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error404.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error404.java[m
+[1mindex fb6f24f..c8c279d 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error404.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error404.java[m
+[36m@@ -1,21 +1,13 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error404 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error404 extends GenericRuntimeException {[m
+   // Not Found[m
+[31m-  private List<String> description;[m
+[31m-[m
+   public Error404(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[31m-  }[m
+[31m-[m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_404);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error500.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error500.java[m
+[1mindex ed2286b..185798b 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error500.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error500.java[m
+[36m@@ -1,21 +1,17 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error500 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error500 extends GenericRuntimeException {[m
+   // Internal Server Error[m
+[31m-  private List<String> description;[m
+[31m-[m
+   public Error500(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_500);[m
+   }[m
+ [m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m  public Error500(List<String> description, Throwable e) {[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_500, e);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error503.java b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error503.java[m
+[1mindex a408236..7a273bf 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error503.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/error/exception/impl/Error503.java[m
+[36m@@ -1,21 +1,17 @@[m
+ package com.eespindola.telegram.bot.error.exception.impl;[m
+ [m
+[31m-import com.eespindola.telegram.bot.error.exception.GenericErrorData;[m
+[32m+[m[32mimport com.eespindola.telegram.bot.error.enums.ErrorEnum;[m
+ [m
+ import java.util.List;[m
+ [m
+[31m-public class Error503 extends RuntimeException implements GenericErrorData {[m
+[32m+[m[32mpublic class Error503 extends GenericRuntimeException {[m
+   // Service Unavailable[m
+[31m-  private List<String> description;[m
+[31m-[m
+   public Error503(List<String> description) {[m
+[31m-    super();[m
+[31m-    this.description = description;[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_503);[m
+   }[m
+ [m
+[31m-  @Override[m
+[31m-  public List<String> getDescription() {[m
+[31m-    return description;[m
+[32m+[m[32m  public Error503(List<String> description, Throwable e) {[m
+[32m+[m[32m    super(description, ErrorEnum.ERROR_503, e);[m
+   }[m
+ [m
+ }[m
+[1mdiff --git a/src/main/java/com/eespindola/telegram/bot/service/impl/BotServiceImpl.java b/src/main/java/com/eespindola/telegram/bot/service/impl/BotServiceImpl.java[m
+[1mindex f9b55c1..1d90b3f 100644[m
+[1m--- a/src/main/java/com/eespindola/telegram/bot/service/impl/BotServiceImpl.java[m
+[1m+++ b/src/main/java/com/eespindola/telegram/bot/service/impl/BotServiceImpl.java[m
+[36m@@ -5,7 +5,6 @@[m [mimport com.eespindola.telegram.bot.configuration.TelegramConfig;[m
+ import com.eespindola.telegram.bot.model.MessageRequest;[m
+ import com.eespindola.telegram.bot.model.dto.Result;[m
+ import com.eespindola.telegram.bot.service.BotService;[m
+[31m-import com.eespindola.telegram.bot.util.Constantes;[m
+ import org.springframework.beans.factory.annotation.Autowired;[m
+ import org.springframework.stereotype.Service;[m
+ [m
